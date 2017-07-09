@@ -45,6 +45,19 @@ app.post('/todos', (req, res) => {
    });
 });
 
+// Get All Todos
+app.get('/todos', (req, res) => {
+  Todo.find()
+  .then(allTodos => {
+     res.send(allTodos);
+  })
+  .catch(err => {
+    res.status(400).send(err);
+  });
+});
+
+// Get Todos by
+
 
 //<------- User Section Start -------->
 
@@ -53,3 +66,7 @@ app.post('/todos', (req, res) => {
 app.listen(PORT, () => {
   console.log(`App is started on PORT: ${PORT}`);
 });
+
+module.exports = {
+  app
+};
