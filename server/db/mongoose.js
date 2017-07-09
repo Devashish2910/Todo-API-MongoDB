@@ -5,7 +5,9 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 // connect database
-mongoose.connect('mongodb://devashish:devashish2910@ds147882.mlab.com:47882/todoapp' || 'mongodb://localhost:27017/TodoApp');
+const heroku = 'mongodb://devashish:devashish2910@ds147882.mlab.com:47882/todoapp';
+const local = 'mongodb://localhost:27017/TodoApp';
+mongoose.connect(heroku || local);
 
 module.exports = {
   mongoose

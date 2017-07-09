@@ -59,6 +59,8 @@ app.get('/todos', (req, res) => {
   });
 });
 
+// Update Todo By Id
+
 // Get Todo by id
 app.get('/todos/:id', (req, res) => {
   const todoId = req.params.id;
@@ -79,6 +81,26 @@ app.get('/todos/:id', (req, res) => {
   }
 });
 
+// Delete Todo by Id
+app.delete('/todos/:id', (req, res) => {
+  const todoId = req.params.id;
+
+  if(!ObjectID.isValid(todoId)) {
+    return res.status(400).send('Bad Request');
+  }
+
+  Todo.findByIdAndRemove(todoId)
+  .then(todo => {
+    if(todo !== null) {
+      res.send('Element Deleted Sucessfully');
+    } else {
+      res.status(404).send('No data found');
+    }
+  })
+  .catch(err => {
+    res.status(400).send(err.message);
+  });
+});
 
 //<------- User Section Start -------->
 
