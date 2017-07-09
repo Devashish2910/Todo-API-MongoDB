@@ -8,6 +8,9 @@ const PORT = process.env.PORT || 3000;  // heroku port || local port
 const {Todo} = require('./models/todo');
 const {User} = require('./models/user');
 
+// load ObjectID from mongodb
+const {ObjectID} = require('mongodb');
+
 // load mongoose
 const {mongoose} = require('./db/mongoose');
 
@@ -24,7 +27,7 @@ app.use(bodyParser.json());
 //<------- Todo Section Start (CRUD) -------->
 // App Root
 app.get('/', (req, res) => {
-  res.send("You are at the root of the app.");
+  res.send("You are at the root of the app");
 });
 
 // Create Todo
@@ -56,7 +59,25 @@ app.get('/todos', (req, res) => {
   });
 });
 
-// Get Todos by
+// Get Todo by id
+app.get('/todos/:id', (req, res) => {
+  const todoId = req.params.id;
+  if(ObjectID.isValid(todoId)) {
+    Todo.findById(todoId)
+    .then(todo => {
+      if(todo !== null) {
+        res.send(todo);
+      } else {
+        res.status(404).send("No Data Found")
+      }
+    })
+    .catch(err => {
+      res.send(err.message);
+    });
+  } else {
+    res.status(400).send('You have not provided a valid Id')
+  }
+});
 
 
 //<------- User Section Start -------->
