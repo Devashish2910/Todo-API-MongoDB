@@ -88,7 +88,6 @@ app.delete('/todos/:id', (req, res) => {
   if(!ObjectID.isValid(todoId)) {
     return res.status(400).send('Bad Request');
   }
-
   Todo.findByIdAndRemove(todoId)
   .then(todo => {
     if(todo !== null) {
@@ -100,6 +99,50 @@ app.delete('/todos/:id', (req, res) => {
   .catch(err => {
     res.status(400).send(err.message);
   });
+});
+
+// Update Todo by Id
+app.patch('/todos/:id', (req, res) => {
+  const todoId = req.params.id;
+  const body = _.pick(req.body, 'description', 'status');
+
+  let userInput = {};
+
+  if(!ObjectID.isValid(todoId)) {
+    return res.status(400).send('Bad Request');
+  }
+
+  // update description
+  if(req.body.hasOwnProperty('description') && _.isString(req.body.description) && req.body.description.trim().length > 0) {
+    // update the value
+     userInput.description = req.body.description.trim();
+  } else if (req.body.hasOwnProperty('description')) {
+    // return 400
+    res.status(400).send("Not appropriate value");
+  }
+
+  // update status
+  if(req.body.hasOwnProperty('status') && _.isBoolean(req.body.status)) {
+    // update the value
+     userInput.status = req.body.status;
+  } else if (req.body.hasOwnProperty('status')) {
+    // return 400
+    res.status(400).send("Not appropriate value");
+  }
+
+  Todo.findByIdAndUpdate(todoId, {$set: userInput}, {new: true})
+  .then(todo => {
+    if(todo !== null) {
+      res.send(todo);
+    } else {
+      res.status(404).send('No data found');
+    }
+  })
+  .catch(err => {
+    res.status(400).send(err.message);
+  });
+
+
 });
 
 //<------- User Section Start -------->
