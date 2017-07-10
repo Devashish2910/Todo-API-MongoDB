@@ -37,6 +37,10 @@ let Schema = mongoose.Schema;
    completedAt: {
      type: Number,
      default: null
+   },
+   creator: {
+     type: mongoose.Schema.Types.ObjectId,
+     required: true
    }
  });
 

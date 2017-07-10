@@ -5,7 +5,7 @@ module.exports = function(req, res, next) {
   return {
     requireAuthentication: function(req, res, next) {
       const token = req.header('Auth');
-
+      //console.log(token);
       User.findByToken(token)
       .then(user => {
         req.token = token;

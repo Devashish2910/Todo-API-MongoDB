@@ -41,10 +41,14 @@ app.get('/', middleware.requireAuthentication, (req, res) => {
 
 // Create Todo
 app.post('/todos', middleware.requireAuthentication, (req, res) => {
+  // get user details
+  const userId = req.user._id;
+
   // create a document
   const todo = new Todo({
     description: req.body.description,
-    status: req.body.status
+    status: req.body.status,
+    creator: userId
   });
   // save it to database
    todo.save()
@@ -59,7 +63,8 @@ app.post('/todos', middleware.requireAuthentication, (req, res) => {
 
 // Get All Todos
 app.get('/todos', middleware.requireAuthentication, (req, res) => {
-  Todo.find()
+
+  Todo.find({creator: req.user._id})
   .then(allTodos => {
      res.send(allTodos);
   })
@@ -72,7 +77,7 @@ app.get('/todos', middleware.requireAuthentication, (req, res) => {
 app.get('/todos/:id', middleware.requireAuthentication, (req, res) => {
   const todoId = req.params.id;
   if(ObjectID.isValid(todoId)) {
-    Todo.findById(todoId)
+    Todo.findOne({_id: todoId, creator: req.user._id})
     .then(todo => {
       if(todo !== null) {
         res.send(todo);
@@ -95,7 +100,9 @@ app.delete('/todos/:id', middleware.requireAuthentication, (req, res) => {
   if(!ObjectID.isValid(todoId)) {
     return res.status(400).send('Bad Request');
   }
-  Todo.findByIdAndRemove(todoId)
+
+
+  Todo.findOneAndRemove({_id: todoId, creator: req.user._id})
   .then(todo => {
     if(todo !== null) {
       res.send('Element Deleted Sucessfully');
@@ -137,7 +144,7 @@ app.patch('/todos/:id', middleware.requireAuthentication, (req, res) => {
     res.status(400).send("Not appropriate value");
   }
 
-  Todo.findByIdAndUpdate(todoId, {$set: userInput}, {new: true})
+  Todo.findOneAndUpdate({_id: todoId, creator: req.user._id}, {$set: userInput}, {new: true})
   .then(todo => {
     if(todo !== null) {
       res.send(todo);
