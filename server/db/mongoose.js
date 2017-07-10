@@ -5,9 +5,16 @@ const mongoose = require('mongoose');
 mongoose.Promise = global.Promise;
 
 // connect database
-const heroku = 'mongodb://devashish:devashish2910@ds147882.mlab.com:47882/todoapp';
-const local = 'mongodb://localhost:27017/TodoApp';
-mongoose.connect(heroku || local);
+let enviroment = process.env.NODE_ENV;
+
+if(enviroment === 'production') {
+  // link from mLab
+  const heroku = 'mongodb://devashish:devashish2910@ds147882.mlab.com:47882/todoapp';
+  mongoose.connect(heroku);
+} else {
+  const local = 'mongodb://localhost:27017/TodoApp';
+  mongoose.connect(local);
+}
 
 module.exports = {
   mongoose

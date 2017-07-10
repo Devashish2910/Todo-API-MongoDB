@@ -20,18 +20,27 @@ const bodyParser = require('body-parser');
 // laod underscore
 const _ = require('underscore');
 
+// load bcryptjs
+const bcrypt = require('bcryptjs');
+
+// load authentication method
+const auth = require('./authentication/auth');
+
+// load middleware
+const middleware = require('./middleware/middleware.js')();
+
 //<------- Middleware Config -------->
 app.use(bodyParser.json());
 
 
 //<------- Todo Section Start (CRUD) -------->
 // App Root
-app.get('/', (req, res) => {
+app.get('/', middleware.requireAuthentication, (req, res) => {
   res.send("You are at the root of the app");
 });
 
 // Create Todo
-app.post('/todos', (req, res) => {
+app.post('/todos', middleware.requireAuthentication, (req, res) => {
   // create a document
   const todo = new Todo({
     description: req.body.description,
@@ -49,7 +58,7 @@ app.post('/todos', (req, res) => {
 });
 
 // Get All Todos
-app.get('/todos', (req, res) => {
+app.get('/todos', middleware.requireAuthentication, (req, res) => {
   Todo.find()
   .then(allTodos => {
      res.send(allTodos);
@@ -59,10 +68,8 @@ app.get('/todos', (req, res) => {
   });
 });
 
-// Update Todo By Id
-
 // Get Todo by id
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', middleware.requireAuthentication, (req, res) => {
   const todoId = req.params.id;
   if(ObjectID.isValid(todoId)) {
     Todo.findById(todoId)
@@ -82,7 +89,7 @@ app.get('/todos/:id', (req, res) => {
 });
 
 // Delete Todo by Id
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', middleware.requireAuthentication, (req, res) => {
   const todoId = req.params.id;
 
   if(!ObjectID.isValid(todoId)) {
@@ -102,7 +109,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 // Update Todo by Id
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', middleware.requireAuthentication, (req, res) => {
   const todoId = req.params.id;
   const body = _.pick(req.body, 'description', 'status');
 
@@ -147,6 +154,82 @@ app.patch('/todos/:id', (req, res) => {
 
 //<------- User Section Start -------->
 
+// Create New User
+app.post('/users', (req, res) => {
+  // take email & password from user
+  const userCred = _.pick(req.body, 'email', 'password');
+
+  // encrypt password
+  const hashing = new Promise((resolve, reject) => {
+    const salt = bcrypt.genSaltSync(5);
+    const hashed_password = bcrypt.hashSync(userCred.password, salt);
+    if(hashed_password !== null) {
+      resolve(hashed_password);
+    } else {
+      reject("Something Weired Happen!!");
+    }
+  })
+
+  // create document
+  hashing
+  .then(hashed_pw => {
+    const user = new User({
+      email: userCred.email,
+      password: hashed_pw
+    });
+
+    // save user to database
+    user.save()
+    .then(userDetails => {
+      res.send(JSON.stringify({id: userDetails._id, email: userDetails.email}, undefined, 2));
+    })
+    .catch(e => {
+      res.status(500).send(e.message);
+    });
+  })
+  .catch(e => {
+    res.status(500).send(e);
+  });
+});
+
+// User Login
+app.post('/users/login', (req, res) => {
+  // take email & password from user
+  const userCred = _.pick(req.body, 'email', 'password');
+
+  if(!_.isString(userCred.email) || !_.isString(userCred.password)) {
+    return res.status(400).send('Please enter approprite credentials.')
+  }
+
+  auth(userCred)
+  .then(user => {
+    // generate token
+    user.generateAuthToken()
+    .then(tokenInstance => {
+      res.header('Auth',tokenInstance).send(user.toPublicJSON());
+    })
+    .catch(err => {
+      res.status(500).send(err);
+    });
+  })
+  .catch(e => {
+    res.status(400).send(e);
+  });
+});
+
+
+// user Logout
+  app.delete('/users/logout', middleware.requireAuthentication, (req, res) => {
+    const token = req.token;
+    //console.log(token);
+    User.destroyToken(token)
+    .then(user => {
+      res.status(200).send(`Logged Out from account: ${user.email}`);
+    })
+    .catch(err => {
+      res.send(err);
+    });
+  });
 
 //<------- App Listen -------->
 app.listen(PORT, () => {

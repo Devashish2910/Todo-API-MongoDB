@@ -21,7 +21,8 @@
     "jsonwebtoken": "^7.4.1",
     "mongodb": "^2.2.30",
     "mongoose": "^4.11.1",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "validator": "^8.0.0"
   },
   "devDependencies": {
     "expect": "^1.20.2",
